@@ -80,14 +80,13 @@ int main(int argc, char** argv)
     while (1) {
 
         int c, ret_val = 0;
-        int opt_index = 0;
         static struct option long_options[] = {
             {"help",        no_argument,    0, 'h'},
             {"version",     no_argument,    0, 'v'},
             {0, 0, 0, 0}
         };
 
-        c = getopt_long(argc, argv, "hv", long_options, &opt_index);
+        c = getopt_long(argc, argv, "hv", long_options, NULL);
         if (c == -1)
             break;
 
