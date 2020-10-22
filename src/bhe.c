@@ -15,12 +15,17 @@
  ***********************************************************************/
 
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
-#include <string.h>
 #include <getopt.h>
+#include <stdint.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
 
-#define BHE_VERSION     0.1
+#define BHE_VERSION         0.1
+#define FILE_BUF_MAX_SIZE   2000000L
+
+#define GET_FILE_BUF_SIZE(size) ((size > FILE_BUF_MAX_SIZE) ? FILE_BUF_MAX_SIZE : size)
 
 static void print_usage(void)
 {
@@ -33,6 +38,39 @@ static void print_usage(void)
 static void print_version(void)
 {
     printf("bhe - Basic Hex Editor, version %.1f\n", BHE_VERSION);
+}
+
+static int load_file(char *fname)
+{
+    uint8_t *file_buf;
+    int fd;
+    struct stat sb;
+
+    fd = open(fname, O_RDWR | O_CREAT);
+    if (fd == -1) {
+        fprintf(stderr, "Could not open file %s (%d) ", fname, errno);
+        perror("");
+        return -1;
+    }
+
+    if (stat(fname, &sb) == -1) {
+        fprintf(stderr, "Could not get file %s size (%d) ", fname, errno);
+        perror("");
+        return -1;
+    }
+
+    printf("File size: %ld\n", sb.st_size);
+
+    file_buf = malloc(GET_FILE_BUF_SIZE(sb.st_size));
+    if (!file_buf) {
+        fprintf(stderr, "Could not allocate file buffer (size: %ld)\n", GET_FILE_BUF_SIZE(sb.st_size));
+        return -1;
+    }
+
+    /* Run editor */
+
+    free(file_buf);
+    return 0;
 }
 
 int main(int argc, char** argv)
@@ -72,7 +110,7 @@ int main(int argc, char** argv)
     else if (argc > 2)
         printf("%s: Only single input file supported\n", argv[0]);
 
-    /* Run editor */
+    return load_file(argv[1]);
 
     return 0;
 }
