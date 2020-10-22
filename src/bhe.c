@@ -17,15 +17,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
-#include <stdint.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
 
+#include "editor.h"
+
 #define BHE_VERSION         0.1
 #define FILE_BUF_MAX_SIZE   2000000L
-
-#define GET_FILE_BUF_SIZE(size) ((size > FILE_BUF_MAX_SIZE) ? FILE_BUF_MAX_SIZE : size)
 
 static void print_usage(void)
 {
@@ -45,6 +44,8 @@ static int load_file(char *fname)
     uint8_t *file_buf;
     int fd;
     struct stat sb;
+    int ret_val = 0;
+    off_t buf_size;
 
     fd = open(fname, O_RDWR | O_CREAT);
     if (fd == -1) {
@@ -59,18 +60,19 @@ static int load_file(char *fname)
         return -1;
     }
 
-    printf("File size: %ld\n", sb.st_size);
+    buf_size = (sb.st_size > FILE_BUF_MAX_SIZE) ? FILE_BUF_MAX_SIZE : sb.st_size;
 
-    file_buf = malloc(GET_FILE_BUF_SIZE(sb.st_size));
+    file_buf = malloc(buf_size);
     if (!file_buf) {
-        fprintf(stderr, "Could not allocate file buffer (size: %ld)\n", GET_FILE_BUF_SIZE(sb.st_size));
+        fprintf(stderr, "Could not allocate file buffer (size: %ld)\n", buf_size);
         return -1;
     }
 
-    /* Run editor */
+    ret_val = bhe_run_editor(fd, file_buf, buf_size);
 
     free(file_buf);
-    return 0;
+
+    return ret_val;
 }
 
 int main(int argc, char** argv)
