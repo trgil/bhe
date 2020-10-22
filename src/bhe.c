@@ -112,7 +112,5 @@ int main(int argc, char** argv)
         printf("%s: Only single input file supported\n", argv[0]);
 
     return load_file(argv[1]);
-
-    return 0;
 }
 
